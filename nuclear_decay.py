@@ -519,7 +519,7 @@ while True:
                         if i % 4 == 1:
                             switch_value *= -1
                 decay_neutron.pos = remember_pos
-                sleep(1)
+                sleep(3)
                 jiggle_lbl.visible = False
                 info_label.text = ''
                 sleep(0.3)
@@ -568,9 +568,10 @@ while True:
                 #        electron_sphere.pos += step_size*travel_vector 
                 lightningbolt.visible = False
                 cell_nomid.visible=True
-                sleep(3)
+                sleep(1)
             cell.visible = False
-            cell_nomid.visible=False    # not working?
+            for j in range(3):
+                cell_nomid_list[j].visible = False
             tombstone.visible = True
             if propagating:
                 Run()
