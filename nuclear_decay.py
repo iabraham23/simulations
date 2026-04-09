@@ -500,8 +500,9 @@ while True:
             cell_nomid2=box(pos=vector(scene.width/2.1,-10,0.3), color=color.white, height = 0.7*320, length = 0.7*512, width = 0.5, opacity= 1, texture='https://i.natgeofe.com/n/548467d8-c5f1-4551-9f58-6817a8d2c45e/NationalGeographic_2572187_16x9.jpg?w=1200', visible = False)
             cell_nomid3=box(pos=vector(scene.width/2.1,-10,0.3), color=color.white, height = 0.7*320, length = 0.7*512, width = 0.5, opacity= 1, texture='https://images.squarespace-cdn.com/content/66ec3b49803ab81bf84f89e4/1726785641222-1BBJMO12LECPNQ5GWYZ2/image-asset.jpeg?content-type=image%2Fjpeg', visible = False)
             
-            cell_nomid_list = [cell_nomid1, cell_nomid2, cell_nomid3]
-            for j in range(3):
+            cell_nomid_list = [cell, cell_nomid1, cell_nomid2, cell_nomid3]
+            for k in range(3):
+                j = k+1
                 cell_nomid = cell_nomid_list[j]
                 decay_neutron = neutron_list[j]
                 lightningbolt = box(pos=vector(scene.width/2.1,0,-110+(j*110))+vector(0,cell.height/2+0.25*527,0.3), color=color.white, height = 0.5*527, length = 0.5*100, width = 0.5, opacity= 1, texture='https://i.imgur.com/z158BcH.png', visible = False)
@@ -566,12 +567,11 @@ while True:
                 #    rate(animation_speed)
                 #    if propagating:
                 #        electron_sphere.pos += step_size*travel_vector 
+                cell_nomid_list[k].visible = False
                 lightningbolt.visible = False
                 cell_nomid.visible=True
                 sleep(1)
-            cell.visible = False
-            for j in range(3):
-                cell_nomid_list[j].visible = False
+            cell_nomid.visible=False
             tombstone.visible = True
             if propagating:
                 Run()
