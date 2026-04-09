@@ -1,5 +1,7 @@
-from vpython import *
+from asyncio import sleep
+import random as rand
 
+from vpython import *
 
 #Create canvas. Set userspin=False, so image won't rotate.
 scene=canvas(width =1024, height=480, center=vector(0,0,0), background=color.white, userspin=True, userzoom=False)
@@ -500,12 +502,13 @@ while True:
             cell_nomid2=box(pos=vector(scene.width/2.1,-10,0.3), color=color.white, height = 0.7*320, length = 0.7*512, width = 0.5, opacity= 1, texture='https://i.natgeofe.com/n/548467d8-c5f1-4551-9f58-6817a8d2c45e/NationalGeographic_2572187_16x9.jpg?w=1200', visible = False)
             cell_nomid3=box(pos=vector(scene.width/2.1,-10,0.3), color=color.white, height = 0.7*320, length = 0.7*512, width = 0.5, opacity= 1, texture='https://images.squarespace-cdn.com/content/66ec3b49803ab81bf84f89e4/1726785641222-1BBJMO12LECPNQ5GWYZ2/image-asset.jpeg?content-type=image%2Fjpeg', visible = False)
             
-            cell_nomid_list = [cell, cell_nomid1, cell_nomid2, cell_nomid3]
-            for k in range(3):
-                j = k+1
-                cell_nomid = cell_nomid_list[j]
+            cell_nomid_list = [cell, cell, cell_nomid1, cell_nomid2, cell_nomid3]   # List of images to iterate through as target are hit/cells are destroyed
+            cell_counter = 1
+            for j in range(5):
                 decay_neutron = neutron_list[j]
-                lightningbolt = box(pos=vector(scene.width/2.1,0,-110+(j*110))+vector(0,cell.height/2+0.25*527,0.3), color=color.white, height = 0.5*527, length = 0.5*100, width = 0.5, opacity= 1, texture='https://i.imgur.com/z158BcH.png', visible = False)
+                
+                # lightning bolt shifts right to target different cell each iteration 
+                lightningbolt = box(pos=vector(scene.width/2.1,0,-110+((cell_counter-1)*110))+vector(0,cell.height/2+0.25*527,0.3), color=color.white, height = 0.5*527, length = 0.5*100, width = 0.5, opacity= 1, texture='https://i.imgur.com/z158BcH.png', visible = False)
                 for particle in neutron_list:
                     if particle.pos.z > decay_neutron.pos.z:
                         decay_neutron=particle
@@ -520,10 +523,10 @@ while True:
                         if i % 4 == 1:
                             switch_value *= -1
                 decay_neutron.pos = remember_pos
-                sleep(3)
+                # sleep(3)  # Unncessery pause?
                 jiggle_lbl.visible = False
                 info_label.text = ''
-                sleep(0.3)
+                # sleep(0.3)    # Unncessery pause?
                 #info_label.text = 'To become more stable, the neutron releases a electron to become a proton'
                 decay_neutron.color = color.magenta
                 I131_lbl.visible = False
@@ -540,7 +543,18 @@ while True:
                 else:
                     randang=-choose_plusminus*pi/2
                 end_pos_g = vector(nucleus_radius,0,0) + nucleon_radius*20*hat(vector(cos(randang),sin(randang),0))
-                end_pos_e = vector(nucleus_radius,0,0) + nucleon_radius*20*hat(vector(1,0,0))
+                
+                # Electrons that hit target vs miss in random directions
+                end_pos_e_hit = vector(nucleus_radius,0,0) + nucleon_radius*20*hat(vector(1,0,0))
+                r = rand.choice([i for i in range(-5,5) if i != 0])
+                end_pos_e_miss = vector(nucleus_radius,0,0) + nucleon_radius*20*hat(vector(1,-r,0))
+                
+                end_pos_e = end_pos_e_miss
+                if j % 2 == 0:  # Hits target on even iterations, misses on odd iterations
+                    end_pos_e = end_pos_e_hit
+                    cell_counter += 1   # Switches to next image in list if the target is hit
+                cell_nomid = cell_nomid_list[cell_counter]
+                
                 choose_plusminus = random()
                 if choose_plusminus > 0.5:
                     randang=choose_plusminus*pi/2
@@ -556,22 +570,31 @@ while True:
                         if electron_sphere.pos.x >= 0.9*cell.pos.x:
                             electron_sphere.visible = False
                             electron_label.visible = False
-                            lightningbolt.visible = True
+                            if j % 2 == 0:
+                                lightningbolt.visible = True
                         electron_sphere.pos += step_size*travel_vector_e
                         electron_label.pos = electron_sphere.pos
                         antineutrino_sphere.pos += step_size*travel_vector_an
                         antineutrino_label.pos = antineutrino_sphere.pos
                         travel_vector_g = hat(end_pos_g - gamma_ray.origin)
                         gamma_ray.origin += step_size*travel_vector_g
+            
+                # Remove leftover particles from prev. iteration
+                antineutrino_sphere.visible = False
+                antineutrino_label.visible = False
+                gamma_ray.visible = False
+
                 #while electron_sphere.pos.x < scene.width/2 + nucleon_radius:
                 #    rate(animation_speed)
                 #    if propagating:
-                #        electron_sphere.pos += step_size*travel_vector 
-                cell_nomid_list[k].visible = False
+                #        electron_sphere.pos += step_size*travel_vector
+                 
+                cell_nomid_list[cell_counter-1].visible = False # Previous cells disappear as the image updates
                 lightningbolt.visible = False
                 cell_nomid.visible=True
-                sleep(1)
-            cell_nomid.visible=False
+                sleep(1.5)  # Time for final image with all cells killed to be visible before tombstone appears
+                
+            cell_nomid.visible = False
             tombstone.visible = True
             if propagating:
                 Run()
