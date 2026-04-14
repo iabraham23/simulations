@@ -498,9 +498,9 @@ while True:
             note = label(pos=vector(0,-scene.height/2-text_size,0), text='', height=text_size, box=False, opacity=0)
             note.text = 'Beta particles are used to destroy cancerous cells.\nGamma rays are used for imaging.'
             
-            cell_nomid1=box(pos=vector(scene.width/2.1,-10,0.3), color=color.white, height = 0.7*320, length = 0.7*512, width = 0.5, opacity= 1, texture='https://medicalimaging.watzekdi.net/images/Nuclear_images/Activity2-Instability/Cancer_cells_crop2_small_nomid.png', visible = False)
-            cell_nomid2=box(pos=vector(scene.width/2.1,-10,0.3), color=color.white, height = 0.7*320, length = 0.7*512, width = 0.5, opacity= 1, texture='https://i.natgeofe.com/n/548467d8-c5f1-4551-9f58-6817a8d2c45e/NationalGeographic_2572187_16x9.jpg?w=1200', visible = False)
-            cell_nomid3=box(pos=vector(scene.width/2.1,-10,0.3), color=color.white, height = 0.7*320, length = 0.7*512, width = 0.5, opacity= 1, texture='https://images.squarespace-cdn.com/content/66ec3b49803ab81bf84f89e4/1726785641222-1BBJMO12LECPNQ5GWYZ2/image-asset.jpeg?content-type=image%2Fjpeg', visible = False)
+            cell_nomid1=box(pos=vector(scene.width/2.1,-10,0.3), color=color.white, height = 0.7*320, length = 0.7*512, width = 0.5, opacity= 1, texture='https://medicalimaging.watzekdi.net/images/Nuclear_images/Activity2-Instability/two_cancer_cells.png', visible = False)
+            cell_nomid2=box(pos=vector(scene.width/2.1,-10,0.3), color=color.white, height = 0.7*320, length = 0.7*512, width = 0.5, opacity= 1, texture='https://medicalimaging.watzekdi.net/images/Nuclear_images/Activity2-Instability/one_cancer_cell.png', visible = False)
+            cell_nomid3=box(pos=vector(scene.width/2.1,-10,0.3), color=color.white, height = 0.7*320, length = 0.7*512, width = 0.5, opacity= 1, texture='https://medicalimaging.watzekdi.net/images/Nuclear_images/Activity2-Instability/zero_cancer_cells.png', visible = False)
             
             cell_nomid_list = [cell, cell, cell_nomid1, cell_nomid2, cell_nomid3]   # List of images to iterate through as target are hit/cells are destroyed
             cell_counter = 1
@@ -513,6 +513,8 @@ while True:
                     if particle.pos.z > decay_neutron.pos.z:
                         decay_neutron=particle
                     remember_pos=decay_neutron.pos
+                neutron_list.remove(decay_neutron)  # Remove decayed neutron from list so it isn't accidentally chosen again for decay
+                proton_list.append(decay_neutron)
                 remember_pos=decay_neutron.pos
                 switch_value = 3
                 for i in range(150):
@@ -545,7 +547,8 @@ while True:
                 end_pos_g = vector(nucleus_radius,0,0) + nucleon_radius*20*hat(vector(cos(randang),sin(randang),0))
                 
                 # Electrons that hit target vs miss in random directions
-                end_pos_e_hit = vector(nucleus_radius,0,0) + nucleon_radius*20*hat(vector(1,0,0))
+                # Electrons that hit targets stop moving when they hit 
+                end_pos_e_hit = vector(nucleus_radius,0,-110+((cell_counter-1)*110)) + nucleon_radius*20*hat(vector(1,0,0))
                 r = rand.choice([i for i in range(-5,5) if i != 0])
                 end_pos_e_miss = vector(nucleus_radius,0,0) + nucleon_radius*20*hat(vector(1,-r,0))
                 
