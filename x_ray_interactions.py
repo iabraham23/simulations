@@ -291,8 +291,16 @@ def interaction(photon, in_vector):
         photon.visible = False
         return vector(1,0,0)
 
+def randomize_compton_position():
+    global compton_electronLoc, url, x_corr, electron_y
+    animation_choice = choice(list(COMPTON_ANIMATION.keys()))
+    compton_electronLoc, url, x_corr, electron_y = COMPTON_ANIMATION[animation_choice]
+    compton_electron.pos = compton_electronLoc
+
 def resetAtomic():
     global has_run, started, PE_scatteredElectron, PE_dropElectron, compton_electron
+    if button_box_list[2].color == color.green:
+        randomize_compton_position()
     PE_scatterElectron.pos = PE_scatterElectronLoc
     PE_dropElectron.pos = PE_dropElectronLoc
     compton_electron.pos = compton_electronLoc
@@ -560,6 +568,7 @@ def cs_but():
     global PE_scatterElectron, PE_dropElectron, compton_electron
     loc_b=control_panel.mouse.pos
     if abs(loc_b.x-button_box_list[2].pos.x)<=button_box_list[0].length/2 and abs(loc_b.y-button_box_list[2].pos.y)<=button_box_list[0].height/2:
+        randomize_compton_position()
         compton_electron.visible=True
         compton_electron.opacity=1
         compton_electron.pos=compton_electronLoc
@@ -651,25 +660,17 @@ while True:
             my_secondary_abs_lbl2.visible=True
         sleep(0.1)
         if button_box_list[2].color == color.green:
-            
-            # Maybe uncomment below in web browser?
-            #global compton_electronLoc, x_corr, electron_y
-            
-            animation_choice = choice(list(COMPTON_ANIMATION.keys()))
-            compton_electronLoc, url, x_corr, electron_y = COMPTON_ANIMATION[animation_choice]
-            #compton_electron.pos = compton_electronLoc
-            
             xray_start = xray_source.pos + vector(xray_source.length/2, 0, 0)
             direction_to_electron = hat(compton_electron.pos - xray_start)
-            
-            if direction_to_electron.y < 0:    
+
+            if direction_to_electron.y < 0:
                 direction_to_electron.y += 0.1
-                
+
             scattered_direction = vector(direction_to_electron.x, -direction_to_electron.y, 0)
             adjusted_end = compton_electron.pos + vector(61.25 + x_corr, 0, 0)
-            
+
             move_objects([xray], [direction_to_electron], [adjusted_end], 2)
-            move_objects([xray, compton_electron], [scattered_direction, vector(1, electron_y, 0)], 
+            move_objects([xray, compton_electron], [scattered_direction, vector(1, electron_y, 0)],
                          [vector(scene.width*(1000/1024),0,0), vector(scene.width*(1000/1024),0,0)], 2)
                          
             
