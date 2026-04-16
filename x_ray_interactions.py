@@ -1,4 +1,4 @@
-#Web VPython 3.2
+# Web VPython 3.2
 from vpython import *
 from random import choice
 
@@ -64,7 +64,7 @@ lbl_start2=label(pos=vector(0, scene.height/2,0), text="Return to target view!",
 medium_box = box(pos=vector(atoms_loc/2,-2.5*text_size,0), height=scene.height/1.5, width=scene.width/10, length=scene.width/30, color=color.black, opacity=0.25, visible=False)
 medium_label = text(pos=medium_box.pos + vector(-20,(medium_box.height/2.3),-50), text='Sample', font="sans", box=False, canvas=scene, axis=vector(5,0.1,10), color=vec(0.622, 0.779, 0.847), height=1.5*text_size, visible=False)
 #BAS Source is a curve and box is invisible
-my_CS_atomic= box(pos=vector(0,-2*text_size,0), height=scene.width/2, length=scene.width/2, width=1, texture="https://i.imgur.com/dpjuhGV.png", color=color.white, opacity=1, visible=False)
+my_CS_atomic= box(pos=vector(0,-2*text_size,0), height=scene.width/2, length=scene.width/2, width=1, texture=url, color=color.white, opacity=1, visible=False)
 my_PE_atomic= box(pos=vector(0,-2*text_size,0), height=scene.width/2, length=scene.width/2, width=1, texture="https://i.imgur.com/Pc2apHh.png", color=color.white, opacity=1, visible=False)
 my_trans_atomic= box(pos=vector(0,-2*text_size,0), height=scene.width/2, length=scene.width/2, width=1, texture="https://i.imgur.com/rhxqQqy.png", color=color.white, opacity=1, visible=False)
 my_mech_atomic_list=[my_PE_atomic, my_CS_atomic, my_trans_atomic]
@@ -296,6 +296,9 @@ def randomize_compton_position():
     animation_choice = choice(list(COMPTON_ANIMATION.keys()))
     compton_electronLoc, url, x_corr, electron_y = COMPTON_ANIMATION[animation_choice]
     compton_electron.pos = compton_electronLoc
+    my_CS_atomic.texture = url
+    #my_CS_atomic.visible = True
+
 
 def resetAtomic():
     global has_run, started, PE_scatteredElectron, PE_dropElectron, compton_electron
