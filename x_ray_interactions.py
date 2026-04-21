@@ -1,4 +1,5 @@
-# Web VPython 3.2
+#Web VPython 3.2
+
 from vpython import *
 from random import choice
 
@@ -29,21 +30,20 @@ PE_dropElectronLoc = vector((-104/1025)*scene.width,(10/513)*scene.height,0)
 PE_scatterElectronLoc = vector((-70/1025)*scene.width,(-31/513)*scene.height,0)
 
 # SETTING UP COMPTON ELECTRON RANDOMNESS 
-
+# seeting comptom election positions
 bottom_left = vector((-63/1025)*scene.width,(-153/513)*scene.height,0)
 top_left = vector((-63/1470)*scene.width,(145/590)*scene.height,0)
-bottom_right = vector((80/1000)*scene.width,(-140/500)*scene.height,0)
-top_right = vector((80/1000)*scene.width,(120/590)*scene.height,0)
+bottom_right = vector((40/1000)*scene.width,(-160/500)*scene.height,0)
+top_right = vector((45/1000)*scene.width,(140/590)*scene.height,0)
 
-bl_url = "https://medicalimaging.watzekdi.net/images/Nuclear_images/Activity2-Instability/electron_BL.png"
-tl_url = "https://medicalimaging.watzekdi.net/images/Nuclear_images/Activity2-Instability/electron_TL.png"
-br_url = "https://medicalimaging.watzekdi.net/images/Nuclear_images/Activity2-Instability/electron_BR.png"
-tr_url = "https://medicalimaging.watzekdi.net/images/Nuclear_images/Activity2-Instability/electron_TR.png"
+bl_url = "https://medicalimaging.watzekdi.net/images/Xray_images/Activity2-Interactions/electron_BL.png"
+tl_url = "https://medicalimaging.watzekdi.net/images/Xray_images/Activity2-Interactions/electron_TL.png"
+br_url = "https://medicalimaging.watzekdi.net/images/Xray_images/Activity2-Interactions/electron_BR.png"
+tr_url = "https://medicalimaging.watzekdi.net/images/Xray_images/Activity2-Interactions/electron_TR.png"
 
 COMPTON_ANIMATION = {1: [bottom_left, bl_url,-20, -0.2], 2: [top_left, tl_url, 40, 0.2], 3: [bottom_right, br_url,-20, -0.2], 4: [top_right, tr_url, 40, 0.2]}
 
 animation_choice = choice(list(COMPTON_ANIMATION.keys()))
-#animation_choice = choice([2])
 compton_electronLoc, url, x_corr, electron_y = COMPTON_ANIMATION[animation_choice]
 
 
@@ -59,6 +59,11 @@ my_element_changed=False
 remember_m_index=0
 
 #Objects
+
+# compton text 
+lbl_compton=label(pos=vector(0, scene.height/2 - 80,0), text="Compton Electron", font="helvetica", box=False, canvas=scene, color=vec(0.000, 0.360, 0.390), height=text_size, visible=False, opacity=0)
+
+
 lbl_start1=label(pos=vector(0, scene.height/2,0), text="Click for mechanistic view!", font="helvetica", box=True, canvas=scene, color=vec(0.000, 0.360, 0.390), height=text_size, visible=True, opacity=0)
 lbl_start2=label(pos=vector(0, scene.height/2,0), text="Return to target view!", font="helvetica", box=True, canvas=scene, color=vec(0.000, 0.360, 0.390), height=text_size, visible=False, opacity=0)
 medium_box = box(pos=vector(atoms_loc/2,-2.5*text_size,0), height=scene.height/1.5, width=scene.width/10, length=scene.width/30, color=color.black, opacity=0.25, visible=False)
@@ -355,7 +360,8 @@ def switchView():
                 medium_label.visible = False
                 detector_box.visible = False
                 detector_label.visible = False
-                lbl_start2.visible=True        
+                lbl_start2.visible=True     
+                lbl_compton.visible=True 
                 probability_box.visible=False
                 my_water_lbl.visible=False
                 my_bone_lbl.visible=False
@@ -396,6 +402,7 @@ def switchView():
                 my_prob_lbl.visible=True
                 my_PEtot_lbl.visible=True
                 my_TRtot_lbl.visible=True
+                lbl_compton.visible=False
                 my_CStot_lbl.visible=True
             sleep(1/(2*animation_speed))
             started = False
@@ -546,6 +553,7 @@ def pe_but():
         compton_electron.visible=False
         my_PE_atomic.visible=True
         my_CS_atomic.visible=False
+        lbl_compton.visible = False
         my_trans_atomic.visible=False
         pe_tot_lbl.visible=False
         cs_tot_lbl.visible=False
@@ -581,6 +589,7 @@ def cs_but():
         PE_scatterElectron.visible=False
         PE_dropElectron.visible=False
         my_CS_atomic.visible=True
+        lbl_compton.visible = True
         my_PE_atomic.visible=False
         my_trans_atomic.visible=False
         my_error_lbl.visible=False
@@ -609,6 +618,7 @@ def trans_but(): #Make lead
     if abs(loc_b.x-button_box_list[3].pos.x)<=button_box_list[0].length/2 and abs(loc_b.y-button_box_list[3].pos.y)<=button_box_list[0].height/2:
         my_trans_atomic.visible=True
         my_CS_atomic.visible=False
+        lbl_compton.visible = False
         my_PE_atomic.visible=False
         has_run=True
         pe_tot_lbl.visible=False
@@ -699,4 +709,3 @@ while True:
         remember_has_run = True
         started_atomic = False
         control_panel.caption
-            
