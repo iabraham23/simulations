@@ -73,7 +73,7 @@ t_final_1 = pi/(2*w1)
 t_final_3 = t_final_1 + TR
 #t_final_3 = t_final_2 + (T1*1.75)
 #t_final_3 = t_final_2  #Same for all tissues t_final_3=0.884 t_final_3-t_final_1 (recovery time) = 0.36
-initial_M_mag = 1-exp(-TR/T1)
+initial_M_mag = 1
 M_mag = initial_M_mag
 M = M_mag*M_dir
 
@@ -192,7 +192,7 @@ def reset():
     B = B_mag*B_dir
     omega=0
     
-    initial_M_mag = 1-exp(-TR/T1)
+    initial_M_mag = 1
     M_mag = initial_M_mag
     M_dir = norm(vector(0,0.96593,0.25882))
     M = M_mag*M_dir
