@@ -34,7 +34,10 @@ B_dir = norm(vector(-1,-0.25882,0.96593)) #hat and norm give unit vectors
 B = B_mag*B_dir
 
 M_mag = 1
-M_dir = norm(vector(0,0.96593,0.25882)) #starting M direction
+equilibrium_dir = norm(vector(0,0.96593,0.25882))
+transverse_pos_dir = norm(vector(1,-0.25882,0.96593))
+transverse_neg_dir = norm(vector(-1,-0.25882,0.96593))
+M_dir = equilibrium_dir #starting M direction
 #print('M_dir=', M_dir)
 M = M_mag*M_dir
 
@@ -76,6 +79,22 @@ t_final_3 = t_final_1 + TR
 initial_M_mag = 1
 M_mag = initial_M_mag
 M = M_mag*M_dir
+
+PULSE_ANIM_DURATION = t_final_1
+RECOVERY_ANIM_DURATION = 0.30
+READOUT_ANIM_DURATION = 0.30
+
+PREP_PULSE = "PREP_PULSE"
+PREP_RECOVERY = "PREP_RECOVERY"
+MEASURE_PULSE = "MEASURE_PULSE"
+MEASURE_READOUT = "MEASURE_READOUT"
+DONE = "DONE"
+
+sequence_phase = PREP_PULSE
+phase_elapsed = 0
+prep_horizontal_axis = vector(0,0,0)
+measured_horizontal_axis = vector(0,0,0)
+measured_start_mag = 1
 
 #Objects
 center = sphere(pos=vec(0,0,0), radius=6, color=norm(vec(141,101,197)), opacity=1)
@@ -170,7 +189,7 @@ def update_sequence_timing():
     t_final_3 = t_final_1 + TR
 
 def graph_x(elapsed_after_pulse):
-    return GRAPH_X_START + GRAPH_X_WIDTH*(elapsed_after_pulse/TR)
+    return GRAPH_X_START + GRAPH_X_WIDTH*(elapsed_after_pulse/TE)
 
 def graph_y(normalized_signal):
     return GRAPH_Y_BASE + GRAPH_SIGNAL_SCALE*normalized_signal
@@ -179,12 +198,39 @@ def update_sequence_ui():
     preset = SEQUENCE_PRESETS[sequence_mode]
     button_box_dict['T1'].color = color.green if sequence_mode == "T1" else vec(0.7,0.7,0.7)
     button_box_dict['T2'].color = color.green if sequence_mode == "T2" else vec(0.7,0.7,0.7)
-    timescale_label.text = f"0    time (after RF pulse)     {preset['TR_ms']} (ms)"
+    timescale_label.text = f"0    time (after measured RF pulse)     {preset['TE_ms']} (ms)"
     sequence_label.text = f"{sequence_mode}-weighted: TR {preset['TR_ms']} ms, TE {preset['TE_ms']} ms"
+
+def transverse_axis_from_vector(vec_value):
+    return pixel_D*mag_h*(dot(vec_value, transverse_pos_dir)*transverse_pos_dir + dot(vec_value, transverse_neg_dir)*transverse_neg_dir)*.99
+
+def vertical_axis_from_vector(vec_value):
+    return pixel_D*mag_h*dot(vec_value, equilibrium_dir)*equilibrium_dir*.99
+
+def resize_component_arrow(component_arrow):
+    component_arrow.headwidth = starting_headw*mag(component_arrow.axis)/mag_h*.9
+    component_arrow.headlength = starting_headl*mag(component_arrow.axis)/mag_h*.9
+    component_arrow.shaftwidth = starting_shaftw*mag(component_arrow.axis)/mag_h*.9
+
+def show_current_tissue_graph_labels():
+    csfgraphlabel1.visible = (mindex == 0)
+    csfgraphlabel2.visible = (mindex == 0)
+    cbgraphlabel1.visible = (mindex == 1)
+    cbgraphlabel2.visible = (mindex == 1)
+    fatgraphlabel1.visible = (mindex == 2)
+    fatgraphlabel2.visible = (mindex == 2)
+
+def hide_rf_visuals():
+    Mvec.visible=False
+    Bvec.visible=False
+    Mvec_label.visible=False
+    Bvec_label.visible=False
+    torque_vec.visible=False
+    torque_label.visible=False
 
 #Functions
 def reset():
-    global isRunning, isStarted, B_mag, B_dir, B,B_vec, M_dir, M, M_tip, Mvec, M_mag, t, torque_vec, torque_label, M_vertical_vec, M_horizontal_vec, voltage_list, voltage_graph, dt, mindex, recoveredMz_list, recoveredMz_graph, initial_M_mag, te_marker_shown, Bvec
+    global isRunning, isStarted, B_mag, B_dir, B,B_vec, M_dir, M, M_tip, Mvec, M_mag, t, torque_vec, torque_label, M_vertical_vec, M_horizontal_vec, voltage_list, voltage_graph, dt, mindex, recoveredMz_list, recoveredMz_graph, initial_M_mag, te_marker_shown, Bvec, sequence_phase, phase_elapsed, prep_horizontal_axis, measured_horizontal_axis, measured_start_mag
     isRunning = False
     isStarted = False
     B_mag = 1
@@ -194,9 +240,14 @@ def reset():
     
     initial_M_mag = 1
     M_mag = initial_M_mag
-    M_dir = norm(vector(0,0.96593,0.25882))
+    M_dir = equilibrium_dir
     M = M_mag*M_dir
     torque = cross(M,B)
+    sequence_phase = PREP_PULSE
+    phase_elapsed = 0
+    prep_horizontal_axis = vector(0,0,0)
+    measured_horizontal_axis = vector(0,0,0)
+    measured_start_mag = 1
 
     Mvec.visible=False
     M_vertical_vec.visible=False
@@ -215,6 +266,7 @@ def reset():
     te_marker.visible=False
     te_marker_label.visible=False
     te_marker_shown = False
+    info_label.text = ''
     voltage_graph.visible=False
     recoveredMz_graph.visible=False
     csfgraphlabel1.visible=False
@@ -239,7 +291,9 @@ def reset():
     M_tip = sphere(pos=Mvec.pos+Mvec.axis, color=Mvec.color, make_trail=True, visible=True)
     voltage_list=[]
     recoveredMz_list=[]
-    reset_label.text="Hit Reset Before Changing Tissue!"
+    voltage_graph = curve(canvas=scene)
+    recoveredMz_graph = curve(canvas=scene)
+    reset_label.text="Press Reset to replay"
     #if csfdone==True and cbdone==True and fatdone==True:
         
     t=0
@@ -252,7 +306,7 @@ def reset():
 #Create Title
 title = label(pos=vector(0,scene.height/2+9*text_size,0), text='Explore Signal Generation and Decay\n(Classical Description)', font='helvetica', height=1.8*text_size, box=False, visible=True, color=color.black, opacity=0)
 lbl_start=label(pos=vector(0,-h/2-4*text_size,0), text="Start with Activities: (link at top)!", font="helvetica", box=False, linewidth=2, canvas=scene, color=vec(0.000, 0.360, 0.390), height=0, visible=True, opacity=0)
-reset_label=label(pos=lbl_start.pos+vector(0,95,0), text="Hit Reset Before Changing Tissue!", color=lbl_start.color, height=1.5*text_size, box=False, opacity=0, visible=False)
+reset_label=label(pos=lbl_start.pos+vector(0,95,0), text="Press Reset to replay", color=lbl_start.color, height=1.5*text_size, box=False, opacity=0, visible=False)
 
 #Hyperlinks - figure this out better from Bruce Sherwood email on 1/12/2024
 x= '''<font size=4> <font>'''
@@ -313,12 +367,18 @@ def pause_play_button():
             button_box_dict['Play/Pause'].color = vec(0.7,0.7,0.7)
             isRunning = False
             M_tip.make_trail = False
+            inactive_button_label.visible = False
+            control_panel.bind('mousedown', reset_button)
         else:
+            if sequence_phase == DONE:
+                reset_label.visible = True
+                return
             button_box_dict['Play/Pause'].color = color.green
             control_panel.unbind('mousedown', reset_button)
             isRunning = True
             isStarted = True
-            M_tip.make_trail = True
+            M_tip.make_trail = sequence_phase in (PREP_PULSE, MEASURE_PULSE)
+            inactive_button_label.visible = True
 
         
 control_panel.bind('mousedown', pause_play_button)
@@ -374,6 +434,7 @@ def change_tissue(m):
         
     #t_final_3 = t_final_2 + T1
     my_element_changed=True
+    reset()
 wtext(text="                                                            <font size=4>Signal-Generating Tissue = <font>")
 menu_text = ["Cerebrospinal Fluid","Cortical Bone","Fat"]  #Center numbers better
 
@@ -384,119 +445,190 @@ scene.select()
 scene.autoscale=False
 while True:
     rate(0.3*animation_speed)
-    while isRunning and t<t_final_1:
-        rate(0.3*animation_speed)
-        inactive_button_label.visible=True
+    if not isRunning:
+        continue
+
+    inactive_button_label.visible=True
+
+    if sequence_phase in (PREP_PULSE, MEASURE_PULSE):
+        pulse_mag = 1 if sequence_phase == PREP_PULSE else measured_start_mag
+        phase_name = "Preparation pulse" if sequence_phase == PREP_PULSE else "Measured pulse"
+        progress = min(phase_elapsed/PULSE_ANIM_DURATION, 1)
+        M_dir = equilibrium_dir.rotate(angle=(-pi/2)*progress, axis=main_x_axis.axis)
+        M = pulse_mag*M_dir
+        torque = cross(M,B)
+
+        info_label.text = phase_name
         Bvec.visible=True
         torque_vec.visible=True
         torque_label.visible=True
+        Mvec.visible=True
         Mvec_label.visible=False
         Bvec_label.visible=True
+        M_tip.visible=True
         Mz_label.visible=True
         Mxy_label.visible=True
-        if isRunning: #redundant
-            torque = cross(M,B)
-            energy = dot(-M,B)
-            M_dir = M_dir.rotate(angle=(-pi/2)/(t_final_1/dt), axis=main_x_axis.axis)
-            M=M_mag*M_dir
-            Mvec.axis = pixel_D*mag_h*M
-            M_tip.pos = Mvec.pos + Mvec.axis
-            M_vertical_vec.opacity=0.8
-            M_vertical_vec.axis = pixel_D*mag_h*dot(M, norm(vector(0,0.96593,0.25882)))*norm(vector(0,0.96593,0.25882))*.99
-            M_vertical_vec.headwidth = starting_headw*mag(M_vertical_vec.axis)/mag_h*.9
-            M_vertical_vec.headlength = starting_headl*mag(M_vertical_vec.axis)/mag_h*.9
-            M_vertical_vec.shaftwidth = starting_shaftw*mag(M_vertical_vec.axis)/mag_h*.9
-            Mz_label.pos=M_vertical_vec.axis+vector(-40,0,0)
-           
-            M_horizontal_vec.axis = pixel_D*mag_h*(dot(M, norm(vector(1,-0.25882,0.96593)))*norm(vector(1,-0.25882,0.96593)) + dot(M, norm(vector(-1,-0.25882,0.96593)))*norm(vector(-1,-0.25882,0.96593)))*.99
-            M_horizontal_vec.headwidth = starting_headw*mag(M_horizontal_vec.axis)/mag_h*.9
-            M_horizontal_vec.headlength = starting_headl*mag(M_horizontal_vec.axis)/mag_h*.9
-            M_horizontal_vec.shaftwidth = starting_shaftw*mag(M_horizontal_vec.axis)/mag_h*.9
-            Mxy_label.pos= M_horizontal_vec.axis+vector(0,2*text_size,0)
-            torque_vec.pos = Mvec.pos+Mvec.axis
-            torque_vec.axis = pixel_D*mag_h/1.5*norm(cross(M,B))
-            torque_label.pos=torque_vec.pos + torque_vec.axis + vector(2*text_size,0,0)
-            t=t+dt  
-    if isRunning and abs(t-t_final_1)<=2*dt:
-        sleep(1)
-        M_horizontal_vec_after_pulse=M_horizontal_vec.axis #start horizontal signal with this
-        M_tip.clear_trail()
-        M_tip.make_trail = False
-        Mvec.visible=False
-        Bvec.visible=False
-        Mvec_label.visible=False
-        Bvec_label.visible=False
-        torque_vec.visible=False
-        torque_label.visible=False
-        #isRunning = False
-        Mz_label.visible=False
-        info_label.text = ''
-        #t=t_final_1
-        
+        mri_signal_label.visible=False
+        recoverMz_label.visible=False
 
+        Mvec.axis = pixel_D*mag_h*M
+        M_tip.pos = Mvec.pos + Mvec.axis
+        M_vertical_vec.visible=True
+        M_vertical_vec.color=vec(0.7,0,0)
+        M_vertical_vec.opacity=0.8
+        M_vertical_vec.axis = vertical_axis_from_vector(M)
+        resize_component_arrow(M_vertical_vec)
+        Mz_label.color = M_vertical_vec.color
+        Mz_label.pos = M_vertical_vec.pos + M_vertical_vec.axis + vector(-40,0,0)
 
-    while isRunning and t>=t_final_1 and t<t_final_3:
-        rate(0.2*animation_speed)
-        if isRunning: #redundant?
-            if mindex==0:
-                csfgraphlabel1.visible=True
-                csfgraphlabel2.visible=True
-            if mindex==1:
-                cbgraphlabel1.visible=True
-                cbgraphlabel2.visible=True
-            if mindex==2:
-                fatgraphlabel1.visible=True
-                fatgraphlabel2.visible=True
-            elapsed_after_pulse = t-t_final_1
-            M_mag = initial_M_mag*exp(-elapsed_after_pulse/T2)
-            M=M_mag*M_dir
-            Mxy_label.visible=True
-            mri_signal_label.visible=True
-            M_vertical_vec.color=vec(0.7,0,0.9)
-            M_vertical_vec.opacity=1
-            M_horizontal_vec.axis=M_horizontal_vec_after_pulse*exp(-elapsed_after_pulse/T2)
-            voltage=vector(graph_x(elapsed_after_pulse), graph_y(M_mag), 0)
-            voltage_list.append(voltage)
-            voltage_graph.visible=False
-            voltage_graph=curve(canvas=scene, pos=voltage_list, radius=2, color=color.blue)
-            M_horizontal_vec.headwidth = starting_headw*mag(M_horizontal_vec.axis)/mag_h*.9
-            M_horizontal_vec.headlength = starting_headl*mag(M_horizontal_vec.axis)/mag_h*.9
-            M_horizontal_vec.shaftwidth = starting_shaftw*mag(M_horizontal_vec.axis)/mag_h*.9
-            Mxy_label.pos=M_horizontal_vec.pos+M_horizontal_vec.axis+vector(0,2*text_size,0)
-            if (mindex==1 or mindex==2) and t>=t_final_1+0.05:
-                Mxy_label.visible=False
-            if mindex==0 and t>=t_final_1+0.15:
-                Mxy_label.visible=False
-            if (not te_marker_shown) and elapsed_after_pulse >= TE:
-                te_signal = initial_M_mag*exp(-TE/T2)
-                te_marker.pos = vector(graph_x(TE), graph_y(te_signal), 0)
-                te_marker.visible = True
-                te_marker_label.pos = te_marker.pos + vector(35,1.5*text_size,0)
-                te_marker_label.visible = True
-                te_marker_shown = True
-            M = norm(vector(0,0.96593,0.25882))
-            M_vertical_vec.axis = pixel_D*mag_h*M*(1-exp(-elapsed_after_pulse/T1))+vector(0,starting_headl*exp(-elapsed_after_pulse/T1),0) 
-            M_vertical_vec.headwidth = starting_headw
-            M_vertical_vec.headlength = starting_headl
-            M_vertical_vec.shaftwidth = starting_shaftw
-            Mz_label.visible=True
-            Mz_label.color=Mvec.color
-            recoverMz_label.visible=True
-            #timescale_label.visible=True
-            recoveredMz_list.append(vector(graph_x(elapsed_after_pulse), graph_y(1-exp(-elapsed_after_pulse/T1)), 0))
-            recoveredMz_graph.visible=False
-            recoveredMz_graph=curve(canvas=scene, pos=recoveredMz_list, radius=2, color=vec(0.9,0,0.7))
-            Mz_label.pos = M_vertical_vec.pos + M_vertical_vec.axis+vector(-40,0,0)
-            Mz_graph_line_sphere.pos = Mz_y_axis_arrow.pos+vec(Mz_y_axis_arrow.shaftwidth+(t/t_final_3)*graph_h/1.3,Mz_x_axis_arrow.shaftwidth+((dot(Mvec.axis,norm(vector(0,0.96593,0.25882))))/(M_mag*mag_h*pixel_D))*graph_h/1.3,0)
-            Mxy_graph_line_sphere.pos = Mxy_y_axis_arrow.pos+vec(Mxy_y_axis_arrow.shaftwidth+(t/t_final_3)*graph_h/1.3,Mxy_x_axis_arrow.shaftwidth+(sqrt(dot(Mvec.axis,norm(vector(1,-0.25882,0.96593)))**2 + dot(Mvec.axis,norm(vector(-1,-0.25882,0.96593)))**2)/(M_mag*mag_h*pixel_D))*graph_h/1.3,0)
-            t = t+dt
+        M_horizontal_vec.visible=True
+        M_horizontal_vec.axis = transverse_axis_from_vector(M)
+        resize_component_arrow(M_horizontal_vec)
+        Mxy_label.pos = M_horizontal_vec.pos + M_horizontal_vec.axis + vector(0,2*text_size,0)
 
-    if isRunning and t>=t_final_3:
-        button_box_dict['Play/Pause'].color = vec(0.7,0.7,0.7)
-        isRunning = False
-        isStarted = False
-        control_panel.bind('mousedown', reset_button)
-        reset_label.visible=True
-        inactive_button_label.visible=False
+        torque_vec.pos = Mvec.pos+Mvec.axis
+        torque_vec.axis = pixel_D*mag_h/1.5*norm(torque)
+        torque_label.pos = torque_vec.pos + torque_vec.axis + vector(2*text_size,0,0)
+
+        phase_elapsed = phase_elapsed + dt
+        t = phase_elapsed
+
+        if phase_elapsed >= PULSE_ANIM_DURATION:
+            final_dir = equilibrium_dir.rotate(angle=-pi/2, axis=main_x_axis.axis)
+            final_M = pulse_mag*final_dir
+            final_horizontal_axis = transverse_axis_from_vector(final_M)
+            M_horizontal_vec.axis = final_horizontal_axis
+            resize_component_arrow(M_horizontal_vec)
+            M_tip.clear_trail()
+            M_tip.make_trail = False
+            M_tip.visible = False
+            hide_rf_visuals()
+            if sequence_phase == PREP_PULSE:
+                prep_horizontal_axis = final_horizontal_axis
+                sequence_phase = PREP_RECOVERY
+            else:
+                measured_horizontal_axis = final_horizontal_axis
+                voltage_list = []
+                recoveredMz_list = []
+                voltage_graph.visible=False
+                recoveredMz_graph.visible=False
+                voltage_graph = curve(canvas=scene)
+                recoveredMz_graph = curve(canvas=scene)
+                te_marker.visible = False
+                te_marker_label.visible = False
+                te_marker_shown = False
+                sequence_phase = MEASURE_READOUT
+            phase_elapsed = 0
+            t = 0
+
+    elif sequence_phase == PREP_RECOVERY:
+        progress = min(phase_elapsed/RECOVERY_ANIM_DURATION, 1)
+        recovery_phys = progress*TR
+
+        info_label.text = "Recovery during TR"
+        hide_rf_visuals()
+        M_tip.visible=False
+        M_tip.make_trail=False
+        Mz_label.visible=True
+        Mxy_label.visible=True
+        mri_signal_label.visible=False
+        recoverMz_label.visible=False
+
+        M_horizontal_vec.visible=True
+        M_horizontal_vec.axis = prep_horizontal_axis*exp(-recovery_phys/T2)
+        resize_component_arrow(M_horizontal_vec)
+        Mxy_label.pos = M_horizontal_vec.pos + M_horizontal_vec.axis + vector(0,2*text_size,0)
+
+        M_vertical_vec.visible=True
+        M_vertical_vec.color=vec(0.7,0,0.9)
+        M_vertical_vec.opacity=1
+        M_vertical_vec.axis = pixel_D*mag_h*equilibrium_dir*(1-exp(-recovery_phys/T1)) + vector(0,starting_headl*exp(-recovery_phys/T1),0)
+        M_vertical_vec.headwidth = starting_headw
+        M_vertical_vec.headlength = starting_headl
+        M_vertical_vec.shaftwidth = starting_shaftw
+        Mz_label.color = Mvec.color
+        Mz_label.pos = M_vertical_vec.pos + M_vertical_vec.axis + vector(-40,0,0)
+
+        phase_elapsed = phase_elapsed + dt
+        t = phase_elapsed
+
+        if phase_elapsed >= RECOVERY_ANIM_DURATION:
+            measured_start_mag = 1-exp(-TR/T1)
+            sequence_phase = MEASURE_PULSE
+            phase_elapsed = 0
+            t = 0
+            M_tip.clear_trail()
+
+    elif sequence_phase == MEASURE_READOUT:
+        progress = min(phase_elapsed/READOUT_ANIM_DURATION, 1)
+        readout_phys = progress*TE
+        measured_signal = measured_start_mag*exp(-readout_phys/T2)
+        recovered_mz = 1-exp(-readout_phys/T1)
+
+        info_label.text = "Readout to TE"
+        hide_rf_visuals()
+        M_tip.visible=False
+        M_tip.make_trail=False
+        Mz_label.visible=True
+        Mxy_label.visible=True
+        mri_signal_label.visible=True
+        recoverMz_label.visible=True
+        show_current_tissue_graph_labels()
+
+        M_horizontal_vec.visible=True
+        M_horizontal_vec.axis = measured_horizontal_axis*exp(-readout_phys/T2)
+        resize_component_arrow(M_horizontal_vec)
+        Mxy_label.pos = M_horizontal_vec.pos + M_horizontal_vec.axis + vector(0,2*text_size,0)
+
+        M_vertical_vec.visible=True
+        M_vertical_vec.color=vec(0.7,0,0.9)
+        M_vertical_vec.opacity=1
+        M_vertical_vec.axis = pixel_D*mag_h*equilibrium_dir*(1-exp(-readout_phys/T1)) + vector(0,starting_headl*exp(-readout_phys/T1),0)
+        M_vertical_vec.headwidth = starting_headw
+        M_vertical_vec.headlength = starting_headl
+        M_vertical_vec.shaftwidth = starting_shaftw
+        Mz_label.color = Mvec.color
+        Mz_label.pos = M_vertical_vec.pos + M_vertical_vec.axis + vector(-40,0,0)
+
+        voltage = vector(graph_x(readout_phys), graph_y(measured_signal), 0)
+        voltage_list.append(voltage)
+        voltage_graph.visible=False
+        voltage_graph = curve(canvas=scene, pos=voltage_list, radius=2, color=color.blue)
+
+        recoveredMz_list.append(vector(graph_x(readout_phys), graph_y(recovered_mz), 0))
+        recoveredMz_graph.visible=False
+        recoveredMz_graph = curve(canvas=scene, pos=recoveredMz_list, radius=2, color=vec(0.9,0,0.7))
+
+        phase_elapsed = phase_elapsed + dt
+        t = phase_elapsed
+
+        if phase_elapsed >= READOUT_ANIM_DURATION:
+            te_signal = measured_start_mag*exp(-TE/T2)
+            te_recovered_mz = 1-exp(-TE/T1)
+            te_point = vector(graph_x(TE), graph_y(te_signal), 0)
+            mz_point = vector(graph_x(TE), graph_y(te_recovered_mz), 0)
+            if len(voltage_list) == 0 or mag(voltage_list[-1] - te_point) > 1e-6:
+                voltage_list.append(te_point)
+                recoveredMz_list.append(mz_point)
+                voltage_graph.visible=False
+                recoveredMz_graph.visible=False
+                voltage_graph = curve(canvas=scene, pos=voltage_list, radius=2, color=color.blue)
+                recoveredMz_graph = curve(canvas=scene, pos=recoveredMz_list, radius=2, color=vec(0.9,0,0.7))
+            te_marker.pos = te_point
+            te_marker.visible = True
+            te_marker_label.pos = te_marker.pos + vector(35,1.5*text_size,0)
+            te_marker_label.visible = True
+            te_marker_shown = True
+            info_label.text = "Signal sampled"
+            button_box_dict['Play/Pause'].color = vec(0.7,0.7,0.7)
+            isRunning = False
+            isStarted = False
+            sequence_phase = DONE
+            control_panel.bind('mousedown', reset_button)
+            reset_label.visible = True
+            inactive_button_label.visible = False
+            phase_elapsed = 0
+            t = 0
+
     if csfgraphlabel1.visible==True and cbgraphlabel1.visible==True and fatgraphlabel1.visible==True:
         reset_label.text="Reload Page to Start Over!"
