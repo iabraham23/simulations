@@ -123,6 +123,7 @@ main_z_axis = arrow(pos=vector(0,0,0), axis=1.15*pixel_D*h_scale*axis_h*norm(vec
 main_x_label = label(pos=main_x_axis.pos+main_x_axis.axis+vector(3*text_size,0,1.5*text_size), text='x', height=1.5*text_size, box=False, color=color.black, opacity=0)
 main_y_label = label(pos=main_y_axis.pos+main_y_axis.axis+vector(-3*text_size,0,text_size), text='y', height=1.5*text_size, box=False, color=color.black, opacity=0)
 main_z_label = label(pos=main_z_axis.pos+main_z_axis.axis+vector(1.5*text_size,-2*text_size,0), text='z', height=1.5*text_size, box=False, color=color.black, opacity=0)
+measurement_label = label(pos=main_y_label.pos+vector(0,-4*text_size,0), text='taking measurement', height=0.95*text_size, box=False, line=False, color=vec(0.000, 0.360, 0.390), opacity=0, visible=False)
 
 main_xgraph_axis= arrow(pos=vector(-750,-2,0), axis=vector(300,0,0), shaftwidth=2.5*w_scale*(axis_h/100), headwidth=7*w_scale*(axis_h/100), headlength=15*w_scale*(axis_h/100), color=vec(0.000, 0.360, 0.390), round=True, opacity=1)
 main_ygraph_axis = arrow(pos=vector(-750,-2,0), axis=vector(0,200,0), shaftwidth=2.5*w_scale*(axis_h/100), headwidth=7*w_scale*(axis_h/100), headlength=15*w_scale*(axis_h/100), color=vec(0.000, 0.360, 0.390), round=True, opacity=1)
@@ -288,6 +289,7 @@ def reset():
     Mxy_label.visible=False
     mri_signal_label.visible=False
     recoverMz_label.visible=False
+    measurement_label.visible=False
     reset_label.visible=False
     inactive_button_label.visible=False
     te_marker.visible=False
@@ -497,6 +499,7 @@ while True:
         Mxy_label.visible=True
         mri_signal_label.visible=False
         recoverMz_label.visible=False
+        measurement_label.visible = False
 
         Mvec.axis = pixel_D*mag_h*M
         M_tip.pos = Mvec.pos + Mvec.axis
@@ -524,8 +527,17 @@ while True:
             final_dir = equilibrium_dir.rotate(angle=-pi/2, axis=main_x_axis.axis)
             final_M = pulse_mag*final_dir
             final_horizontal_axis = transverse_axis_from_vector(final_M)
+            M_dir = final_dir
+            M = final_M
+            Mvec.axis = pixel_D*mag_h*M
+            M_tip.pos = Mvec.pos + Mvec.axis
+            M_vertical_vec.axis = vertical_axis_from_vector(M)
+            resize_component_arrow(M_vertical_vec)
             M_horizontal_vec.axis = final_horizontal_axis
             resize_component_arrow(M_horizontal_vec)
+            measurement_label.visible = (sequence_phase == MEASURE_PULSE)
+            sleep(1)
+            measurement_label.visible = False
             M_tip.clear_trail()
             M_tip.make_trail = False
             M_tip.visible = False
@@ -561,6 +573,7 @@ while True:
         Mxy_label.visible=True
         mri_signal_label.visible=False
         recoverMz_label.visible=False
+        measurement_label.visible=False
 
         M_horizontal_vec.visible=True
         M_horizontal_vec.axis = prep_horizontal_axis*exp(-recovery_phys/T2)
@@ -602,6 +615,7 @@ while True:
         Mxy_label.visible=True
         mri_signal_label.visible=True
         recoverMz_label.visible=True
+        measurement_label.visible=False
         show_current_tissue_graph_labels()
 
         M_horizontal_vec.visible=True
@@ -651,6 +665,7 @@ while True:
             button_box_dict['Play/Pause'].color = vec(0.7,0.7,0.7)
             isRunning = False
             isStarted = False
+            measurement_label.visible = False
             sequence_phase = DONE
             control_panel.bind('mousedown', reset_button)
             reset_label.visible = True
