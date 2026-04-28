@@ -1,4 +1,4 @@
-from vpython import *
+from vpython import * 
 
 
 #Create canvas. Set userspin=False, so image won't rotate.
@@ -69,7 +69,7 @@ antineutrino_key_lbl=label(pos=antineutrino_key.pos, text='v\u0305', font = 'tim
 nuclei_names_list = [F18_lbl,Tc_lbl,I131_lbl]
 nucleus_sphere = sphere(pos=vector(0,0,0), radius=nucleus_radius, color=vec(0.7,0.7,0.7), opacity=0.2)
 
-info_label = label(pos=vector(0,-scene.height/2+4*text_size,0), text='', height=text_size, box=False, opacity=0)
+info_label = label(pos=vector(0,-scene.height/2-text_size,0), text='', height=text_size, box=False, opacity=0)
 
 pulse_pos = [vector(-27.791,-1.773,0), vector(-25.791,-1.773,0), vector(-23.791,-1.773,0), vector(-21.791,-1.773,0), vector(-20.791,-3.773,0), vector(-18.791,-5.773,0), vector(-16.791,-3.773,0), vector(-15.791,-0.773,0), vector(-15.791,2.227,0), vector(-14.791,5.227,0), vector(-14.791,7.227,0), vector(-14.791,9.227,0), vector(-12.791,9.227,0), vector(-12.791,7.227,0), vector(-11.791,5.227,0), vector(-11.791,3.227,0), vector(-10.791,1.227,0), vector(-10.791,-0.773,0), vector(-10.791,-2.773,0), vector(-10.791,-4.773,0), vector(-10.791,-6.773,0), vector(-10.791,-8.773,0), vector(-9.791,-10.773,0), vector(-9.791,-12.773,0), vector(-7.791,-9.773,0), vector(-6.791,-7.773,0), vector(-6.791,-5.773,0), vector(-6.791,-3.773,0), vector(-6.791,-1.773,0), vector(-6.791,0.227,0), vector(-6.791,3.227,0), vector(-6.791,6.227,0), vector(-6.791,9.227,0), vector(-6.791,11.227,0), vector(-6.791,14.227,0), vector(-6.791,12.227,0), vector(-5.791,14.227,0), vector(-5.791,16.227,0), vector(-5.791,18.227,0), vector(-4.791,20.227,0), vector(-4.791,22.227,0), vector(-4.791,24.227,0), vector(-4.791,26.227,0), vector(-3.791,19.227,0), vector(-2.791,16.227,0), vector(-2.791,14.227,0), vector(-1.791,11.227,0), vector(-1.791,9.227,0), vector(-1.791,6.227,0), vector(-1.791,2.227,0), vector(-1.791,-2.773,0), vector(-1.791,-6.773,0), vector(-1.791,-10.773,0), vector(-1.791,-15.773,0), vector(-1.791,-19.773,0), vector(-1.791,-22.773,0), vector(-1.791,-25.773,0), vector(-1.791,-27.773,0), vector(-0.791,-30.773,0), vector(-0.791,-33.773,0), vector(0.209,-36.773,0), vector(0.209,-38.773,0), vector(2.209,-29.773,0), vector(2.209,-24.773,0), vector(3.209,-18.773,0), vector(3.209,-15.773,0), vector(3.209,-10.773,0), vector(3.209,-6.773,0), vector(3.209,-3.773,0), vector(3.209,0.227,0), vector(3.209,4.227,0), vector(3.209,8.227,0), vector(3.209,11.227,0), vector(3.209,15.227,0), vector(4.209,18.227,0), vector(4.209,21.227,0), vector(4.209,24.227,0), vector(5.209,26.227,0), vector(5.209,21.227,0), vector(6.209,16.227,0), vector(7.209,13.227,0), vector(7.209,10.227,0), vector(7.209,7.227,0), vector(7.209,3.227,0), vector(7.209,-0.773,0), vector(7.209,-3.773,0), vector(7.209,-6.773,0), vector(7.209,-9.773,0), vector(9.209,-10.773,0), vector(9.209,-13.773,0), vector(12.209,-8.773,0), vector(12.209,-3.773,0), vector(12.209,1.227,0), vector(12.209,5.227,0), vector(12.209,8.227,0), vector(14.209,10.227,0), vector(16.209,7.227,0), vector(16.209,5.227,0), vector(16.209,1.227,0), vector(16.209,-2.773,0), vector(16.209,-4.773,0), vector(18.209,-6.773,0), vector(21.209,-4.773,0), vector(21.209,-2.773,0), vector(21.209,0.227,0), vector(23.209,1.227,0), vector(24.209,-1.773,0), vector(27.209,-1.773,0), vector(30.209,-1.773,0), vector(31.209,-1.773,0)]
 for i in range(len(pulse_pos)):
@@ -77,9 +77,7 @@ for i in range(len(pulse_pos)):
     pulse_pos[i].y =2*(scene.height/480)*pulse_pos[i].y
 
 #Quick Fix
-LOR_arrow1 = arrow(pos = vector(0,0,0), axis = vector(0,0,0), round = True, headlength = 50, headwidth = 30, shaftwidth = 15, color = color.black, opacity=0.1, visable=False)
-LOR_arrow2 = arrow(pos = vector(0,0,0), axis = vector(0,0,0), round = True, headlength = 50, headwidth = 30, shaftwidth = 15, color = color.black, opacity=0.1, visable=False)
-neutrino_sphere = sphere(pos= vector(0,0,0) + nucleon_radius*hat(vector(0,0.5,0.5)), radius=0.2*nucleon_radius, color=color.green, opacity = 0.3, visible = False)
+
 positron_sphere = sphere(pos=vector(0,0,0) + nucleon_radius*hat(vector(0,0.5,0.5)), radius=0.4*nucleon_radius, color=color.purple, opacity = 0.3, visible = False)
 positron_label = label(pos=positron_sphere.pos, text='e<sup>+<sup>', height=text_size, color=color.black, box=False, opacity=0, visible = False)
 neutrino_sphere = sphere(pos=vector(0,0,0) + nucleon_radius*hat(vector(0,0.5,0.5)), radius=0.2*nucleon_radius, color=color.green, opacity = 0.3, visible = False)
@@ -363,8 +361,8 @@ def reset_button():
         neutron_excess = False
         metastable_energy = False
         finished = False
-        LOR_arrow1.visible = False
-        LOR_arrow2.visible = False
+        for LOR_arrow in all_LOR_arrows:    # Goes through all of the arrows and toggles the visual off
+            LOR_arrow.visible = False
         cell.visible = False
         tombstone.visible = False
         cell_lbl.visible = False
@@ -397,88 +395,102 @@ while True:
                 if particle.pos.z > decay_proton.pos.z:
                     decay_proton=particle
             #info_label.text = 'Due to an excess of protons, the nucleus becomes unstable as the coulumb potential overtakes the strong force'
-            remember_pos=decay_proton.pos
-            switch_value = 3
-            for i in range(150):
-                jiggle_lbl.visible = True
-                rate(animation_speed)
-                if propagating:
-                    decay_proton.pos += switch_value*hat(vector(1,1,1))
-                    if i % 3 == 1:
-                        switch_value *= -1
-            decay_proton.pos = remember_pos
-            jiggle_lbl.visible = False
-            decay_proton.color = color.cyan
-            F18_lbl.visible = False
-            O18_lbl.visible = True
-            positron_sphere = sphere(pos=remember_pos + nucleon_radius*hat(vector(0,0.5,0.5)), radius=0.4*nucleon_radius, color=color.purple, opacity = 0.3, visible = True)
-            positron_label = label(pos=positron_sphere.pos, text='e<sup>+<sup>', height=text_size, color=color.black, box=False, opacity=0)
-            neutrino_sphere = sphere(pos=remember_pos + nucleon_radius*hat(vector(0,0.5,0.5)), radius=0.2*nucleon_radius, color=color.red, opacity = 0.3, visible = True)
-            neutrino_label = label(pos=neutrino_sphere.pos, text='v', font ='times', height=0.8*text_size, color=color.black, box=False, opacity=0)
-            end_pos = vector(nucleus_radius,0,0) + 0.9*nucleon_radius*hat(vector(1,0,0)) #This determines collision point. Want close to nucleus
-            choose_plusminus = random()
-            if choose_plusminus > 0.5:
-                randang=choose_plusminus*pi/2
-            else:
-                randang=-choose_plusminus*pi/2
-            end_pos_n = vector(nucleus_radius,0,0) + nucleon_radius*20*hat(vector(cos(randang),sin(randang),0))
-            while find_distance(positron_sphere.pos, end_pos/2) > 2*step_size:
-                rate(animation_speed)
-                if propagating:
-                    travel_vector = hat(end_pos/2 - positron_sphere.pos)
-                    positron_sphere.pos += step_size*travel_vector
-                    positron_label.pos = positron_sphere.pos
-                    travel_vector_n = hat(end_pos_n - neutrino_sphere.pos)
+
+            directions = {"first" : [(0.5,1,0), (-0.5,-1,0)],   # Directions to change the each set of gamma ray origins, corresponds to each LOR arrow  
+                          "second": [(-0.5,1,0), (0.5,-1,0)], 
+                          "third": [(3.5,1,0), (-3.5,-1,0)], 
+                          "fourth": [(-3.5,1,0), (3.5,-1,0)], 
+                          "fifth": [(0,1,0), (0,-1,0)]}
+            all_LOR_arrows = []     # A list of all individual arrows used to create the LOR arrows, used to reset each arrow in the reset button  
+            for dir1, dir2 in directions.values():  # Loops 5 times through each set of gamma ray origins, used to create 5 LOR arrows
+                remember_pos=decay_proton.pos
+                switch_value = 3
+                for i in range(150):
+                    jiggle_lbl.visible = True
+                    rate(animation_speed)
+                    if propagating:
+                        decay_proton.pos += switch_value*hat(vector(1,1,1))
+                        if i % 3 == 1:
+                            switch_value *= -1
+                decay_proton.pos = remember_pos
+                jiggle_lbl.visible = False
+                decay_proton.color = color.cyan
+                F18_lbl.visible = False
+                O18_lbl.visible = True
+                positron_sphere = sphere(pos=remember_pos + nucleon_radius*hat(vector(0,0.5,0.5)), radius=0.4*nucleon_radius, color=color.purple, opacity = 0.3, visible = True)
+                positron_label = label(pos=positron_sphere.pos, text='e<sup>+<sup>', height=text_size, color=color.black, box=False, opacity=0)
+                neutrino_sphere = sphere(pos=remember_pos + nucleon_radius*hat(vector(0,0.5,0.5)), radius=0.2*nucleon_radius, color=color.red, opacity = 0.3, visible = True)
+                neutrino_label = label(pos=neutrino_sphere.pos, text='v', font ='times', height=0.8*text_size, color=color.black, box=False, opacity=0)
+                end_pos = vector(nucleus_radius,0,0) + 0.9*nucleon_radius*hat(vector(1,0,0)) #This determines collision point. Want close to nucleus
+                choose_plusminus = random()
+                if choose_plusminus > 0.5:
+                    randang=choose_plusminus*pi/2
+                else:
+                    randang=-choose_plusminus*pi/2
+                end_pos_n = vector(nucleus_radius,0,0) + nucleon_radius*20*hat(vector(cos(randang),sin(randang),0))
+                while find_distance(positron_sphere.pos, end_pos/2) > 2*step_size:
+                    rate(animation_speed)
+                    if propagating:
+                        travel_vector = hat(end_pos/2 - positron_sphere.pos)
+                        positron_sphere.pos += step_size*travel_vector
+                        positron_label.pos = positron_sphere.pos
+                        travel_vector_n = hat(end_pos_n - neutrino_sphere.pos)
+                        neutrino_sphere.pos += step_size*travel_vector_n
+                        neutrino_label.pos = neutrino_sphere.pos
+                electron_sphere = sphere(pos=end_pos + vector(find_distance(end_pos, positron_sphere.pos),0,0), radius=electron_key.length, color=color.cyan, visible=True, opacity=0.2)
+                electron_label = label(pos=electron_sphere.pos, text='e<sup>-<sup>', height=text_size, color=color.black, box=False, opacity=0, visible=True)
+                while find_distance(positron_sphere.pos, end_pos) > 2*step_size or find_distance(electron_sphere.pos, end_pos) > 2*step_size:
+                    rate(animation_speed)
+                    if propagating:
+                        travel_vector_p = hat(end_pos - positron_sphere.pos)
+                        travel_vector_e = hat(end_pos - electron_sphere.pos)
+                        positron_sphere.pos += step_size*travel_vector_p
+                        positron_label.pos = positron_sphere.pos
+                        electron_sphere.pos += step_size*travel_vector_e
+                        electron_label.pos = electron_sphere.pos
+                        neutrino_sphere.pos += 3*step_size*travel_vector_n
+                        neutrino_label.pos = neutrino_sphere.pos
+                my_click.visible = True
+                scene.pause()
+                #sleep(0.1)
+                my_click.visible = False
+                positron_sphere.visible = False
+                positron_label.visible = False
+                electron_sphere.visible = False
+                electron_label.visible = False
+                neutrino_sphere.visible = False
+                neutrino_label.visible = False
+                explotion_sphere = sphere(pos=end_pos, radius=0, color=color.orange, visible=True)
+                
+                while explotion_sphere.radius < nucleon_radius:
+                    rate(animation_speed)
+                    if propagating:
+                        explotion_sphere.radius += nucleon_radius/10
+                while explotion_sphere.radius > 0:
+                    rate(animation_speed)
+                    if propagating:
+                        if explotion_sphere.radius - nucleon_radius/10 > 0:
+                            explotion_sphere.radius -= nucleon_radius/10
+                        else:
+                            break
+                explotion_sphere.visible = False
+                info_label.text = 'If both gamma rays are transmitted and detected, they generate \na line of response (arrow) that helps to localize the decay event.'
+                gamma_ray_1 = curve(pos=pulse_pos, origin=end_pos, size=0.5*vector(1,1,1), color=color.black)
+                gamma_ray_2 = curve(pos=pulse_pos, origin=end_pos, size=0.5*vector(1,1,1), color=color.black)
+                for i in range(85):
+                    rate(animation_speed)
+                    gamma_ray_1.origin += step_size*hat(vector(*dir1)) 
+                    gamma_ray_2.origin += step_size*hat(vector(*dir2)) 
                     neutrino_sphere.pos += step_size*travel_vector_n
                     neutrino_label.pos = neutrino_sphere.pos
-            electron_sphere = sphere(pos=end_pos + vector(find_distance(end_pos, positron_sphere.pos),0,0), radius=electron_key.length, color=color.cyan, visible=True, opacity=0.2)
-            electron_label = label(pos=electron_sphere.pos, text='e<sup>-<sup>', height=text_size, color=color.black, box=False, opacity=0, visible=True)
-            while find_distance(positron_sphere.pos, end_pos) > 2*step_size or find_distance(electron_sphere.pos, end_pos) > 2*step_size:
-                rate(animation_speed)
-                if propagating:
-                    travel_vector_p = hat(end_pos - positron_sphere.pos)
-                    travel_vector_e = hat(end_pos - electron_sphere.pos)
-                    positron_sphere.pos += step_size*travel_vector_p
-                    positron_label.pos = positron_sphere.pos
-                    electron_sphere.pos += step_size*travel_vector_e
-                    electron_label.pos = electron_sphere.pos
-                    neutrino_sphere.pos += 3*step_size*travel_vector_n
-                    neutrino_label.pos = neutrino_sphere.pos
-            my_click.visible = True
-            scene.pause()
-            #sleep(0.1)
-            my_click.visible = False
-            positron_sphere.visible = False
-            positron_label.visible = False
-            electron_sphere.visible = False
-            electron_label.visible = False
-            explotion_sphere = sphere(pos=end_pos, radius=0, color=color.orange, visible=True)
-            
-            while explotion_sphere.radius < nucleon_radius:
-                rate(animation_speed)
-                if propagating:
-                    explotion_sphere.radius += nucleon_radius/10
-            while explotion_sphere.radius > 0:
-                rate(animation_speed)
-                if propagating:
-                    if explotion_sphere.radius - nucleon_radius/10 > 0:
-                        explotion_sphere.radius -= nucleon_radius/10
-                    else:
-                        break
-            explotion_sphere.visible = False
-            info_label.text = 'If both gamma rays are transmitted and detected, they generate \na line of response (arrow) that helps to localize the decay event.'
-            gamma_ray_1 = curve(pos=pulse_pos, origin=end_pos, size=0.5*vector(1,1,1), color=color.black)
-            gamma_ray_2 = curve(pos=pulse_pos, origin=end_pos, size=0.5*vector(1,1,1), color=color.black)
-            for i in range(85):
-                rate(animation_speed)
-                gamma_ray_1.origin += step_size*hat(vector(0.5,1,0))
-                gamma_ray_2.origin += step_size*hat(vector(-0.5,-1,0))
-                neutrino_sphere.pos += step_size*travel_vector_n
-                neutrino_label.pos = neutrino_sphere.pos
-            gamma_ray_1.visible = False
-            gamma_ray_2.visible = False
-            LOR_arrow1 = arrow(pos = gamma_ray_2.origin, axis = 1.05*(gamma_ray_1.origin - gamma_ray_2.origin), round = True, headlength = 50, headwidth = 30, shaftwidth = 15, color = color.black, opacity=0.1)
-            LOR_arrow2 = arrow(pos = gamma_ray_1.origin, axis = -1.05*(gamma_ray_1.origin - gamma_ray_2.origin), round = True, headlength = 50, headwidth = 30, shaftwidth = 15, color = color.black, opacity=0.1)
+                gamma_ray_1.visible = False
+                gamma_ray_2.visible = False
+                LOR_arrow1 = arrow(pos = gamma_ray_2.origin, axis = 1.05*(gamma_ray_1.origin - gamma_ray_2.origin), round = True, headlength = 50, headwidth = 30, shaftwidth = 15, color = color.black, opacity=0.1)
+                LOR_arrow2 = arrow(pos = gamma_ray_1.origin, axis = -1.05*(gamma_ray_1.origin - gamma_ray_2.origin), round = True, headlength = 50, headwidth = 30, shaftwidth = 15, color = color.black, opacity=0.1) 
+                all_LOR_arrows.append(LOR_arrow1)   # Every time it loops through, two arrows create the LOR visual, then gets appended to list of LOR arrows
+                all_LOR_arrows.append(LOR_arrow2)
+                F18_lbl.visible = True
+                O18_lbl.visible = False
             sleep(2)
             #info_label.text = ''
 
