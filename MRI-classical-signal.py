@@ -180,7 +180,7 @@ GRAPH_X_START = main_xgraph_axis.pos.x
 GRAPH_X_WIDTH = main_xgraph_axis.axis.x
 GRAPH_Y_BASE = main_xgraph_axis.pos.y
 GRAPH_SIGNAL_SCALE = 170
-CSF_T1_VISUAL_SCALE = 2.5
+CSF_T1_VISUAL_SCALE = 4.0
 MXY_LABEL_MIN_AXIS = 2.5*text_size
 
 def update_sequence_timing():
