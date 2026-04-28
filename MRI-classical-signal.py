@@ -81,8 +81,8 @@ M_mag = initial_M_mag
 M = M_mag*M_dir
 
 PULSE_ANIM_DURATION = t_final_1
-RECOVERY_ANIM_DURATION = 0.30
-READOUT_ANIM_DURATION = 0.30
+RECOVERY_ANIM_DURATION = TR
+READOUT_ANIM_DURATION = TR
 
 PREP_PULSE = "PREP_PULSE"
 PREP_RECOVERY = "PREP_RECOVERY"
@@ -182,14 +182,16 @@ GRAPH_Y_BASE = main_xgraph_axis.pos.y
 GRAPH_SIGNAL_SCALE = 170
 
 def update_sequence_timing():
-    global TR, TE, t_final_3
+    global TR, TE, t_final_3, RECOVERY_ANIM_DURATION, READOUT_ANIM_DURATION
     preset = SEQUENCE_PRESETS[sequence_mode]
     TR = preset["TR_ms"] / MS_PER_SIM_UNIT
     TE = preset["TE_ms"] / MS_PER_SIM_UNIT
     t_final_3 = t_final_1 + TR
+    RECOVERY_ANIM_DURATION = TR
+    READOUT_ANIM_DURATION = TR
 
 def graph_x(elapsed_after_pulse):
-    return GRAPH_X_START + GRAPH_X_WIDTH*(elapsed_after_pulse/TE)
+    return GRAPH_X_START + GRAPH_X_WIDTH*(elapsed_after_pulse/TR)
 
 def graph_y(normalized_signal):
     return GRAPH_Y_BASE + GRAPH_SIGNAL_SCALE*normalized_signal
@@ -198,7 +200,7 @@ def update_sequence_ui():
     preset = SEQUENCE_PRESETS[sequence_mode]
     button_box_dict['T1'].color = color.green if sequence_mode == "T1" else vec(0.7,0.7,0.7)
     button_box_dict['T2'].color = color.green if sequence_mode == "T2" else vec(0.7,0.7,0.7)
-    timescale_label.text = f"0    time (after measured RF pulse)     {preset['TE_ms']} (ms)"
+    timescale_label.text = f"0    time (after measured RF pulse)     {preset['TR_ms']} (ms)"
     sequence_label.text = f"{sequence_mode}-weighted: TR {preset['TR_ms']} ms, TE {preset['TE_ms']} ms"
 
 def transverse_axis_from_vector(vec_value):
@@ -561,11 +563,11 @@ while True:
 
     elif sequence_phase == MEASURE_READOUT:
         progress = min(phase_elapsed/READOUT_ANIM_DURATION, 1)
-        readout_phys = progress*TE
+        readout_phys = progress*TR
         measured_signal = measured_start_mag*exp(-readout_phys/T2)
         recovered_mz = 1-exp(-readout_phys/T1)
 
-        info_label.text = "Readout to TE"
+        info_label.text = "Readout during TR"
         hide_rf_visuals()
         M_tip.visible=False
         M_tip.make_trail=False
@@ -599,26 +601,25 @@ while True:
         recoveredMz_graph.visible=False
         recoveredMz_graph = curve(canvas=scene, pos=recoveredMz_list, radius=2, color=vec(0.9,0,0.7))
 
-        phase_elapsed = phase_elapsed + dt
-        t = phase_elapsed
-
-        if phase_elapsed >= READOUT_ANIM_DURATION:
+        if (not te_marker_shown) and readout_phys >= TE:
             te_signal = measured_start_mag*exp(-TE/T2)
-            te_recovered_mz = 1-exp(-TE/T1)
-            te_point = vector(graph_x(TE), graph_y(te_signal), 0)
-            mz_point = vector(graph_x(TE), graph_y(te_recovered_mz), 0)
-            if len(voltage_list) == 0 or mag(voltage_list[-1] - te_point) > 1e-6:
-                voltage_list.append(te_point)
-                recoveredMz_list.append(mz_point)
-                voltage_graph.visible=False
-                recoveredMz_graph.visible=False
-                voltage_graph = curve(canvas=scene, pos=voltage_list, radius=2, color=color.blue)
-                recoveredMz_graph = curve(canvas=scene, pos=recoveredMz_list, radius=2, color=vec(0.9,0,0.7))
-            te_marker.pos = te_point
+            te_marker.pos = vector(graph_x(TE), graph_y(te_signal), 0)
             te_marker.visible = True
             te_marker_label.pos = te_marker.pos + vector(35,1.5*text_size,0)
             te_marker_label.visible = True
             te_marker_shown = True
+
+        phase_elapsed = phase_elapsed + dt
+        t = phase_elapsed
+
+        if phase_elapsed >= READOUT_ANIM_DURATION:
+            if not te_marker_shown:
+                te_signal = measured_start_mag*exp(-TE/T2)
+                te_marker.pos = vector(graph_x(TE), graph_y(te_signal), 0)
+                te_marker.visible = True
+                te_marker_label.pos = te_marker.pos + vector(35,1.5*text_size,0)
+                te_marker_label.visible = True
+                te_marker_shown = True
             info_label.text = "Signal sampled"
             button_box_dict['Play/Pause'].color = vec(0.7,0.7,0.7)
             isRunning = False
