@@ -1,5 +1,7 @@
-from vpython import * 
+from asyncio import sleep
+import random as rand
 
+from vpython import *
 
 #Create canvas. Set userspin=False, so image won't rotate.
 scene=canvas(width =1024, height=480, center=vector(0,0,0), background=color.white, userspin=True, userzoom=False)
@@ -37,11 +39,11 @@ my_click = label(pos=vector(scene.width/1.6,-scene.height/1.8,0), text="Click to
 proton_list = []
 neutron_list = []
 cell=box(pos=vector(scene.width/2.1,-10,0.3), color=color.white, height = 0.7*320, length = 0.7*512, width = 0.5, opacity= 1, texture='https://medicalimaging.watzekdi.net/images/Nuclear_images/Activity2-Instability/Cancer_cells_crop2_small.png', visible = True)
-cell_nomid=box(pos=vector(scene.width/2.1,-10,0.3), color=color.white, height = 0.7*320, length = 0.7*512, width = 0.5, opacity= 1, texture='https://medicalimaging.watzekdi.net/images/Nuclear_images/Activity2-Instability/Cancer_cells_crop2_small_nomid.png', visible = False)
+#cell_nomid=box(pos=vector(scene.width/2.1,-10,0.3), color=color.white, height = 0.7*320, length = 0.7*512, width = 0.5, opacity= 1, texture='https://medicalimaging.watzekdi.net/images/Nuclear_images/Activity2-Instability/Cancer_cells_crop2_small_nomid.png', visible = False)
 
 cell_lbl=label(pos=vector(scene.width/2.1,cell.height/2+4.5*text_size,0.3), color=vec(0,0.36,0.36), text = 'Cancerous Cells', height = 1.5*text_size, opacity = 0, box = False, visible = True)
 
-lighteningbolt = box(pos=vector(scene.width/2.1,0,0)+vector(0,cell.height/2+0.25*527,0.3), color=color.white, height = 0.5*527, length = 0.5*100, width = 0.5, opacity= 1, texture='https://i.imgur.com/z158BcH.png', visible = False)
+lightningbolt = box(pos=vector(scene.width/2.1,0,0)+vector(0,cell.height/2+0.25*527,0.3), color=color.white, height = 0.5*527, length = 0.5*100, width = 0.5, opacity= 1, texture='https://i.imgur.com/z158BcH.png', visible = False)
 tombstone = box(pos=vector(scene.width/2.1,cell.pos.y,0.3), color=color.white, height = 0.6*273, length = 0.6*240, width = 0.5, opacity= 1, texture='https://i.imgur.com/YZF3zwr.png', visible = False)
 F18_lbl=label(pos=vector(0,scene.height/5,0), text='Fluorine-18', box=False, height=1.5*text_size, color=vec(0,0.36,0.36), opacity=0, visible=False)
 O18_lbl=label(pos=vector(0,scene.height/5,0), text='Oxygen-18', box=False, height=1.5*text_size, color=vec(0,0.36,0.36), opacity=0, visible=False)
@@ -505,74 +507,110 @@ while True:
             control_panel.unbind('mousedown', proton_button)
             control_panel.unbind('mousedown', neutron_button)
             control_panel.unbind('mousedown', metastable_button)
-            decay_neutron = neutron_list[0]
-            for particle in neutron_list:
-                if particle.pos.z > decay_neutron.pos.z:
-                    decay_neutron=particle
+            note = label(pos=vector(0,-scene.height/2-text_size,0), text='', height=text_size, box=False, opacity=0)
+            note.text = 'Beta particles are used to destroy cancerous cells.\nGamma rays are used for imaging.'
+            
+            cell_nomid1=box(pos=vector(scene.width/2.1,-10,0.3), color=color.white, height = 0.7*320, length = 0.7*512, width = 0.5, opacity= 1, texture='https://medicalimaging.watzekdi.net/images/Nuclear_images/Activity2-Instability/two_cancer_cells.png', visible = False)
+            cell_nomid2=box(pos=vector(scene.width/2.1,-10,0.3), color=color.white, height = 0.7*320, length = 0.7*512, width = 0.5, opacity= 1, texture='https://medicalimaging.watzekdi.net/images/Nuclear_images/Activity2-Instability/one_cancer_cell.png', visible = False)
+            cell_nomid3=box(pos=vector(scene.width/2.1,-10,0.3), color=color.white, height = 0.7*320, length = 0.7*512, width = 0.5, opacity= 1, texture='https://medicalimaging.watzekdi.net/images/Nuclear_images/Activity2-Instability/zero_cancer_cells.png', visible = False)
+            
+            cell_nomid_list = [cell, cell, cell_nomid1, cell_nomid2, cell_nomid3]   # List of images to iterate through as target are hit/cells are destroyed
+            cell_counter = 1
+            for j in range(5):
+                decay_neutron = neutron_list[j]
+                
+                # lightning bolt shifts right to target different cell each iteration 
+                lightningbolt = box(pos=vector(scene.width/2.1,0,-110+((cell_counter-1)*110))+vector(0,cell.height/2+0.25*527,0.3), color=color.white, height = 0.5*527, length = 0.5*100, width = 0.5, opacity= 1, texture='https://i.imgur.com/z158BcH.png', visible = False)
+                for particle in neutron_list:
+                    if particle.pos.z > decay_neutron.pos.z:
+                        decay_neutron=particle
+                    remember_pos=decay_neutron.pos
+                neutron_list.remove(decay_neutron)  # Remove decayed neutron from list so it isn't accidentally chosen again for decay
+                proton_list.append(decay_neutron)
                 remember_pos=decay_neutron.pos
-            remember_pos=decay_neutron.pos
-            switch_value = 3
-            for i in range(150):
-                rate(animation_speed)
-                jiggle_lbl.visible = True
-                if propagating:
-                    decay_neutron.pos += switch_value*hat(vector(1,1,1))
-                    if i % 4 == 1:
-                        switch_value *= -1
-            decay_neutron.pos = remember_pos
-            sleep(1)
-            jiggle_lbl.visible = False
-            info_label.text = ''
-            sleep(0.3)
-            #info_label.text = 'To become more stable, the neutron releases a electron to become a proton'
-            decay_neutron.color = color.magenta
-            I131_lbl.visible = False
-            Xe131_lbl.visible = True
-            electron_sphere = sphere(pos=remember_pos + nucleon_radius*hat(vector(0,0.5,0.5)), radius=0.4*nucleon_radius, color=color.cyan, opacity=0.2)
-            electron_label = label(pos=electron_sphere.pos, text='e<sup>-<sup>', height=electron_sphere.radius*2.5, color=color.black, box=False, opacity=0)
-            antineutrino_sphere = sphere(pos=remember_pos + nucleon_radius*hat(vector(0,0.5,0.5)), radius=0.2*nucleon_radius, color=color.green, opacity = 0.3)
-            antineutrino_label = label(pos=antineutrino_sphere.pos, text='v\u0305', font ='times', height=0.8*text_size, color=color.black, box=False, opacity=0)
-            #end_pos = vector(nucleus_radius,0,0) + nucleon_radius*5*hat(vector(1,0,0))
-            gamma_ray = curve(pos=pulse_pos, origin=vector(nucleus_radius,0,0), size=0.5*vector(1,1,1), color=color.black)
-            choose_plusminus = random()
-            if choose_plusminus > 0.5:
-                randang=choose_plusminus*pi/2
-            else:
-                randang=-choose_plusminus*pi/2
-            end_pos_g = vector(nucleus_radius,0,0) + nucleon_radius*20*hat(vector(cos(randang),sin(randang),0))
-            end_pos_e = vector(nucleus_radius,0,0) + nucleon_radius*20*hat(vector(1,0,0))
-            choose_plusminus = random()
-            if choose_plusminus > 0.5:
-                randang=choose_plusminus*pi/2
-            else:
-                randang=-choose_plusminus*pi/2
-            end_pos_an = vector(nucleus_radius,0,0) + nucleon_radius*20*hat(vector(cos(randang),sin(randang),0))
-            while find_distance(electron_sphere.pos, end_pos_e) > 2*step_size:
-                rate(animation_speed)
-                if propagating:
-                    travel_vector_e = hat(end_pos_e - electron_sphere.pos)
-                    travel_vector_an = hat(end_pos_an - antineutrino_sphere.pos)
-                    if electron_sphere.pos.x >= 0.9*cell.pos.x:
-                        electron_sphere.visible = False
-                        electron_label.visible = False
-                        lighteningbolt.visible = True
-                    electron_sphere.pos += step_size*travel_vector_e
-                    electron_label.pos = electron_sphere.pos
-                    antineutrino_sphere.pos += step_size*travel_vector_an
-                    antineutrino_label.pos = antineutrino_sphere.pos
-                    travel_vector_g = hat(end_pos_g - gamma_ray.origin)
-                    gamma_ray.origin += step_size*travel_vector_g
-            info_label.text = 'Beta particles are used to destroy cancerous cells.\nGamma rays are used for imaging.'
-            #while electron_sphere.pos.x < scene.width/2 + nucleon_radius:
-            #    rate(animation_speed)
-            #    if propagating:
-            #        electron_sphere.pos += step_size*travel_vector 
-            lighteningbolt.visible = False
-            cell_nomid.visible=True
-            sleep(3)
+                switch_value = 3
+                for i in range(150):
+                    rate(animation_speed)
+                    jiggle_lbl.visible = True
+                    if propagating:
+                        decay_neutron.pos += switch_value*hat(vector(1,1,1))
+                        if i % 4 == 1:
+                            switch_value *= -1
+                decay_neutron.pos = remember_pos
+                # sleep(3)  # Unncessery pause?
+                jiggle_lbl.visible = False
+                info_label.text = ''
+                # sleep(0.3)    # Unncessery pause?
+                #info_label.text = 'To become more stable, the neutron releases a electron to become a proton'
+                decay_neutron.color = color.magenta
+                I131_lbl.visible = False
+                Xe131_lbl.visible = True
+                electron_sphere = sphere(pos=remember_pos + nucleon_radius*hat(vector(0,0.5,0.5)), radius=0.4*nucleon_radius, color=color.cyan, opacity=0.2)
+                electron_label = label(pos=electron_sphere.pos, text='e<sup>-<sup>', height=electron_sphere.radius*2.5, color=color.black, box=False, opacity=0)
+                antineutrino_sphere = sphere(pos=remember_pos + nucleon_radius*hat(vector(0,0.5,0.5)), radius=0.2*nucleon_radius, color=color.green, opacity = 0.3)
+                antineutrino_label = label(pos=antineutrino_sphere.pos, text='v\u0305', font ='times', height=0.8*text_size, color=color.black, box=False, opacity=0)
+                #end_pos = vector(nucleus_radius,0,0) + nucleon_radius*5*hat(vector(1,0,0))
+                gamma_ray = curve(pos=pulse_pos, origin=vector(nucleus_radius,0,0), size=0.5*vector(1,1,1), color=color.black)
+                choose_plusminus = random()
+                if choose_plusminus > 0.5:
+                    randang=choose_plusminus*pi/2
+                else:
+                    randang=-choose_plusminus*pi/2
+                end_pos_g = vector(nucleus_radius,0,0) + nucleon_radius*20*hat(vector(cos(randang),sin(randang),0))
+                
+                # Electrons that hit target vs miss in random directions
+                # Electrons that hit targets stop moving when they hit 
+                end_pos_e_hit = vector(nucleus_radius,0,-110+((cell_counter-1)*110)) + nucleon_radius*20*hat(vector(1,0,0))
+                r = rand.choice([i for i in range(-5,5) if i != 0])
+                end_pos_e_miss = vector(nucleus_radius,0,0) + nucleon_radius*20*hat(vector(1,-r,0))
+                
+                end_pos_e = end_pos_e_miss
+                if j % 2 == 0:  # Hits target on even iterations, misses on odd iterations
+                    end_pos_e = end_pos_e_hit
+                    cell_counter += 1   # Switches to next image in list if the target is hit
+                cell_nomid = cell_nomid_list[cell_counter]
+                
+                choose_plusminus = random()
+                if choose_plusminus > 0.5:
+                    randang=choose_plusminus*pi/2
+                else:
+                    randang=-choose_plusminus*pi/2
+                end_pos_an = vector(nucleus_radius,0,0) + nucleon_radius*20*hat(vector(cos(randang),sin(randang),0))
+                while find_distance(electron_sphere.pos, end_pos_e) > 2*step_size:
+                    rate(animation_speed)
+                    if propagating:
+                        i = 110
+                        travel_vector_e = hat(end_pos_e - electron_sphere.pos)
+                        travel_vector_an = hat(end_pos_an - antineutrino_sphere.pos)
+                        if electron_sphere.pos.x >= 0.9*cell.pos.x:
+                            electron_sphere.visible = False
+                            electron_label.visible = False
+                            if j % 2 == 0:
+                                lightningbolt.visible = True
+                        electron_sphere.pos += step_size*travel_vector_e
+                        electron_label.pos = electron_sphere.pos
+                        antineutrino_sphere.pos += step_size*travel_vector_an
+                        antineutrino_label.pos = antineutrino_sphere.pos
+                        travel_vector_g = hat(end_pos_g - gamma_ray.origin)
+                        gamma_ray.origin += step_size*travel_vector_g
+            
+                # Remove leftover particles from prev. iteration
+                antineutrino_sphere.visible = False
+                antineutrino_label.visible = False
+                gamma_ray.visible = False
+
+                #while electron_sphere.pos.x < scene.width/2 + nucleon_radius:
+                #    rate(animation_speed)
+                #    if propagating:
+                #        electron_sphere.pos += step_size*travel_vector
+                 
+                cell_nomid_list[cell_counter-1].visible = False # Previous cells disappear as the image updates
+                lightningbolt.visible = False
+                cell_nomid.visible=True
+                sleep(1.5)  # Time for final image with all cells killed to be visible before tombstone appears
+                
+            cell_nomid.visible = False
             tombstone.visible = True
-            cell.visible = False
-            cell_nomid.visible=False
             if propagating:
                 Run()
             finished = True
