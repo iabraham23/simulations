@@ -180,6 +180,7 @@ GRAPH_X_START = main_xgraph_axis.pos.x
 GRAPH_X_WIDTH = main_xgraph_axis.axis.x
 GRAPH_Y_BASE = main_xgraph_axis.pos.y
 GRAPH_SIGNAL_SCALE = 170
+CSF_T1_VISUAL_SCALE = 2.5
 
 def update_sequence_timing():
     global TR, TE, t_final_3, RECOVERY_ANIM_DURATION, READOUT_ANIM_DURATION
@@ -213,6 +214,26 @@ def resize_component_arrow(component_arrow):
     component_arrow.headwidth = starting_headw*mag(component_arrow.axis)/mag_h*.9
     component_arrow.headlength = starting_headl*mag(component_arrow.axis)/mag_h*.9
     component_arrow.shaftwidth = starting_shaftw*mag(component_arrow.axis)/mag_h*.9
+
+def display_magnitude(real_magnitude):
+    if sequence_mode == "T1" and mindex == 0:
+        return min(1, real_magnitude*CSF_T1_VISUAL_SCALE)
+    return real_magnitude
+
+def displayed_vertical_axis(displayed_mz):
+    return pixel_D*mag_h*equilibrium_dir*displayed_mz
+
+def style_recovery_arrow(component_arrow):
+    axis_mag = mag(component_arrow.axis)
+    if axis_mag <= 1e-6:
+        component_arrow.headwidth = 0
+        component_arrow.headlength = 0
+        component_arrow.shaftwidth = 0
+        return
+    size_scale = min(1, axis_mag/starting_headl)
+    component_arrow.headwidth = starting_headw*size_scale
+    component_arrow.headlength = starting_headl*size_scale
+    component_arrow.shaftwidth = starting_shaftw*size_scale
 
 def show_current_tissue_graph_labels():
     csfgraphlabel1.visible = (mindex == 0)
@@ -453,7 +474,7 @@ while True:
     inactive_button_label.visible=True
 
     if sequence_phase in (PREP_PULSE, MEASURE_PULSE):
-        pulse_mag = 1 if sequence_phase == PREP_PULSE else measured_start_mag
+        pulse_mag = 1 if sequence_phase == PREP_PULSE else display_magnitude(measured_start_mag)
         phase_name = "Preparation pulse" if sequence_phase == PREP_PULSE else "Measured pulse"
         progress = min(phase_elapsed/PULSE_ANIM_DURATION, 1)
         M_dir = equilibrium_dir.rotate(angle=(-pi/2)*progress, axis=main_x_axis.axis)
@@ -526,6 +547,7 @@ while True:
     elif sequence_phase == PREP_RECOVERY:
         progress = min(phase_elapsed/RECOVERY_ANIM_DURATION, 1)
         recovery_phys = progress*TR
+        display_recovery_mz = display_magnitude(1-exp(-recovery_phys/T1))
 
         info_label.text = "Recovery during TR"
         hide_rf_visuals()
@@ -544,10 +566,8 @@ while True:
         M_vertical_vec.visible=True
         M_vertical_vec.color=vec(0.7,0,0.9)
         M_vertical_vec.opacity=1
-        M_vertical_vec.axis = pixel_D*mag_h*equilibrium_dir*(1-exp(-recovery_phys/T1)) + vector(0,starting_headl*exp(-recovery_phys/T1),0)
-        M_vertical_vec.headwidth = starting_headw
-        M_vertical_vec.headlength = starting_headl
-        M_vertical_vec.shaftwidth = starting_shaftw
+        M_vertical_vec.axis = displayed_vertical_axis(display_recovery_mz)
+        style_recovery_arrow(M_vertical_vec)
         Mz_label.color = Mvec.color
         Mz_label.pos = M_vertical_vec.pos + M_vertical_vec.axis + vector(-40,0,0)
 
@@ -566,6 +586,7 @@ while True:
         readout_phys = progress*TR
         measured_signal = measured_start_mag*exp(-readout_phys/T2)
         recovered_mz = 1-exp(-readout_phys/T1)
+        display_recovered_mz = display_magnitude(recovered_mz)
 
         info_label.text = "Readout during TR"
         hide_rf_visuals()
@@ -585,10 +606,8 @@ while True:
         M_vertical_vec.visible=True
         M_vertical_vec.color=vec(0.7,0,0.9)
         M_vertical_vec.opacity=1
-        M_vertical_vec.axis = pixel_D*mag_h*equilibrium_dir*(1-exp(-readout_phys/T1)) + vector(0,starting_headl*exp(-readout_phys/T1),0)
-        M_vertical_vec.headwidth = starting_headw
-        M_vertical_vec.headlength = starting_headl
-        M_vertical_vec.shaftwidth = starting_shaftw
+        M_vertical_vec.axis = displayed_vertical_axis(display_recovered_mz)
+        style_recovery_arrow(M_vertical_vec)
         Mz_label.color = Mvec.color
         Mz_label.pos = M_vertical_vec.pos + M_vertical_vec.axis + vector(-40,0,0)
 
