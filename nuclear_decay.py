@@ -493,6 +493,8 @@ while True:
                 all_LOR_arrows.append(LOR_arrow2)
                 F18_lbl.visible = True
                 O18_lbl.visible = False
+            F18_lbl.visible = False
+            O18_lbl.visible = True                
             sleep(2)
             #info_label.text = ''
 
