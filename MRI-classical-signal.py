@@ -181,6 +181,7 @@ GRAPH_X_WIDTH = main_xgraph_axis.axis.x
 GRAPH_Y_BASE = main_xgraph_axis.pos.y
 GRAPH_SIGNAL_SCALE = 170
 CSF_T1_VISUAL_SCALE = 2.5
+MXY_LABEL_MIN_AXIS = 2.5*text_size
 
 def update_sequence_timing():
     global TR, TE, t_final_3, RECOVERY_ANIM_DURATION, READOUT_ANIM_DURATION
@@ -222,6 +223,9 @@ def display_magnitude(real_magnitude):
 
 def displayed_vertical_axis(displayed_mz):
     return pixel_D*mag_h*equilibrium_dir*displayed_mz
+
+def should_show_mxy_label(axis_value):
+    return mag(axis_value) > MXY_LABEL_MIN_AXIS
 
 def style_recovery_arrow(component_arrow):
     axis_mag = mag(component_arrow.axis)
@@ -562,6 +566,7 @@ while True:
         M_horizontal_vec.axis = prep_horizontal_axis*exp(-recovery_phys/T2)
         resize_component_arrow(M_horizontal_vec)
         Mxy_label.pos = M_horizontal_vec.pos + M_horizontal_vec.axis + vector(0,2*text_size,0)
+        Mxy_label.visible = should_show_mxy_label(M_horizontal_vec.axis)
 
         M_vertical_vec.visible=True
         M_vertical_vec.color=vec(0.7,0,0.9)
@@ -575,6 +580,7 @@ while True:
         t = phase_elapsed
 
         if phase_elapsed >= RECOVERY_ANIM_DURATION:
+            Mxy_label.visible = False
             measured_start_mag = 1-exp(-TR/T1)
             sequence_phase = MEASURE_PULSE
             phase_elapsed = 0
@@ -602,6 +608,7 @@ while True:
         M_horizontal_vec.axis = measured_horizontal_axis*exp(-readout_phys/T2)
         resize_component_arrow(M_horizontal_vec)
         Mxy_label.pos = M_horizontal_vec.pos + M_horizontal_vec.axis + vector(0,2*text_size,0)
+        Mxy_label.visible = should_show_mxy_label(M_horizontal_vec.axis)
 
         M_vertical_vec.visible=True
         M_vertical_vec.color=vec(0.7,0,0.9)
@@ -632,6 +639,7 @@ while True:
         t = phase_elapsed
 
         if phase_elapsed >= READOUT_ANIM_DURATION:
+            Mxy_label.visible = False
             if not te_marker_shown:
                 te_signal = measured_start_mag*exp(-TE/T2)
                 te_marker.pos = vector(graph_x(TE), graph_y(te_signal), 0)
